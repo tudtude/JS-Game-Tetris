@@ -1,0 +1,321 @@
+<html>
+    <head>
+        <title> Tetris JS </title>
+    </head>
+    <style>
+        body {
+            text-align: center;
+            background: black
+        }
+        h1 {
+            color: white;
+            margin: 5px
+        }
+        h3 {
+            margin: 10px
+        }
+        #display {
+            height: 85vh;
+        }
+        #display2 {
+            height: 50vh;
+            margin-left: 20px;
+        }
+        #score {
+            color: white;
+        }
+    </style>
+    <body>
+        <h1> Tetris javascript</h1>
+        <h3 id='score' ></h3>
+        <canvas id='display' width='200' height='400'></canvas>
+        <canvas id='display2' width="200" height="350"></canvas>
+    </body>
+    <script src='tetracube.js'></script>
+
+</html>
+<script>
+    
+    let board, newRow, tetris, gameState
+    let gameDisplay = document.getElementById('display')
+    let gameDisplay2 = document.getElementById('display2')
+    let displayContext = gameDisplay.getContext('2d')
+    let displayContext2 = gameDisplay2.getContext('2d')
+    let framePerSec = 60
+    let tetrisLength = 5
+    let frameCount = 0
+    let score = 0
+    displayContext.scale( 20, 20)
+    displayContext2.scale( 20, 20)
+        
+    // --------------- Start setup object
+    board = {
+        row: 20,
+        column: 10,
+        empty: 'white',
+        body: []
+        
+    }
+    
+    tetris = {
+        x : 3,
+        y : 2,
+        animate: 0,
+        list: createTetris()
+    }
+    
+    // --------------- End setup object
+    
+    // --------------- Start setup game loop
+    function gameLoop(){
+        if( gameState == 'gameOver' ) {
+            return
+        }
+        frameCount ++
+        backGroundShow()
+        backGroundShow2()
+        boardShow()
+        tetrisShow()
+        tetrisUpdate()
+        tetrisListShow()
+        showTextNexts()
+        requestAnimationFrame( gameLoop )
+    }
+    newRow = []
+    for( let i = 0; i < board.column; i ++){
+        newRow.push( board.empty )
+    }
+    board.body = boardCreate()
+    gameLoop()
+    // --------------- End setup game loop
+
+    function backGroundShow2(){
+        displayContext2.fillStyle = 'gray'
+        displayContext2.fillRect(0,0,gameDisplay2.width, gameDisplay2.height)
+    }
+    
+    function backGroundShow(){
+        displayContext.fillStyle = 'white'
+        displayContext.fillRect(0,0,gameDisplay.width, gameDisplay.height)
+    }
+        
+    function drawCell( x, y, color, context = displayContext ){
+        context.fillStyle = color 
+        context.fillRect( x, y, 1, 1)
+        context.strokeStyle = 'black'
+        context.lineWidth = 1 / 100
+        context.strokeRect(x, y, 1, 1)
+    }
+    
+    function boardCreate(){
+        let body = []
+        for( let i = 0; i < 20; i ++ ){
+            body[i] = []
+            for( let j = 0; j < 10 ; j ++ ){
+                body[i][j] = 'white'
+            }
+        }
+        return body        
+    }
+    
+    function boardShow(){
+        for( let i = 0; i < board.row; i ++ ){
+            for( let j = 0; j < board.column; j ++ ){
+                drawCell( j, i, board.body[i][j])
+            }
+        }
+    }
+    
+    function createTetris(){
+        let tetris = []
+        for( let i = 0; i < 5; i ++){
+            tetris.push( Math.floor( Math.random() * items.length ))
+        }
+        return tetris
+    }
+    
+    function tetrisShow(){
+        let t = items[tetris.list[0]]
+        let a = tetris.animate
+        let tType = t[0][a]
+        let tcolor = t[1]
+        for( let i = 0; i < tType.length; i ++ ){
+            for( let j = 0; j < tType[i].length; j ++ ){
+                if( tType[i][j] ){
+                    drawCell( tetris.x + j, tetris.y + i, tcolor )
+                }
+            }
+        }
+                   
+    }
+    
+    function tetrisUpdate(){
+        if( frameCount % framePerSec == 0 ){
+            tetrisDrop()
+        }
+    }
+    
+    function tetrisDrop(){
+        if( isCollide( 0, 1 ) ){
+            console.log('obj');
+            fixed()
+            tetrisReset()
+        }else{
+            tetris.y ++
+            boardShow()
+        }
+    }
+    
+    function isCollide( x, y ){
+        let a = tetris.animate
+        if( x == 0 && y == 0){
+            a ++
+            a = a % 4
+        }
+        let t = items[tetris.list[0]]
+        let tType = t[0][a]
+        for( let i = 0; i < tType.length; i ++ ){
+            for( let j = 0; j < tType[i].length; j ++ ){
+                
+                let testX = x + j + tetris.x
+                let testY = y + i + tetris.y
+                if( tType[i][j] ){
+                    
+                    // case of bottom
+                    if( testY == board.row || testX < 0 || testX > board.column ){
+                        return true
+                    }
+                    // case of another tetris
+                    if(board.body[testY][testX] !== board.empty ){
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
+    
+    function fixed(){
+        if( tetris.y == 0 ){
+            gameState = 'gameOver'
+            return
+        }
+        
+        let t = items[tetris.list[0]]
+        let a = tetris.animate
+        let tType = t[0][a]
+        let tcolor = t[1]
+        let x = tetris.x
+        let y = tetris.y
+        
+        for( let i = 0; i < tType.length; i ++ ){
+            for( let j = 0; j < tType[i].length; j ++ ){
+                if( tType[i][j] ){
+                    board.body[i + y][j + x] = tcolor 
+                }
+            }
+        }
+        // ifline full
+        cutLine()
+    }
+    
+    function tetrisReset(){
+        tetris.list.shift()
+        tetris.list.push( Math.floor( Math.random() * items.length ))
+        tetris.x = 3
+        tetris.y = 0
+    }
+    
+    function tetrisMove( direction ){
+        if( isCollide(direction, 0 )){
+            return
+        }
+        tetris.x += direction
+    }
+    
+    function tetrisRotate(){
+        let oldX = tetris.x
+        if( isCollide( 0, 0) ){
+            tetris.x = tetris.x + ( tetris.x > 5 ? -1 : 1 )
+            if( isCollide( 0, 0) ){
+                tetris.x = tetris.x + ( tetris.x > 5 ? -1 : 1 )
+                if(isCollide( 0, 0)){
+                    tetris.x = oldX
+                    return
+                }else{
+                    tetris.animate ++
+                    tetris.animate = tetris.animate % 4  
+                }
+            } else {
+                tetris.animate ++
+                tetris.animate = tetris.animate % 4     
+            }
+        }else{
+            tetris.x = oldX
+            tetris.animate ++
+            tetris.animate = tetris.animate % 4
+        }
+    }
+        
+    function cutLine(){
+        let multiply = 1
+        for( let i = board.row - 1; i >= 0; i -- ){
+            if( !board.body[i].includes( board.empty ) ){
+                board.body.splice( i, 1 )
+                board.body.unshift( newRow )
+                score += 10 * multiply
+                multiply ++
+                i ++
+            }
+        }
+    }
+        
+//    display2
+    function tetrisListShow(){
+        let y = 5
+        let x = 3
+        for( let z = 1; z < tetris.list.length; z ++ ){
+            let t = items[tetris.list[z]]
+            let tType = t[0][0]
+            let tcolor = t[1]
+            y = t[0] == O ? y-1 : y
+            y = t[0] == I ? y-1 : y
+            for( let i = 0; i < tType.length; i ++ ){
+                for( let j = 0; j < tType[i].length; j ++ ){
+                    if( tType[i][j] ){
+                        drawCell( x + j, y + i, tcolor, displayContext2 )
+                    }
+                }
+            }
+            if( t[0] == I ){
+                y += tType.length - 1
+            } else {
+                y += tType.length
+            }
+        }
+            
+    }
+    
+    function showTextNexts(){
+        displayContext2.fillStyle = 'white'
+        displayContext2.font = '1px Arial'
+        displayContext2.fillText('Score : ' + score, 2, 2)
+        displayContext2.fillText('Next Tetris', 2, 3)
+    }
+    
+        
+    document.addEventListener('keydown', function(event){
+        if( event.keyCode == 40 ){
+            tetrisDrop()
+        }
+        if (event.keyCode == 37){
+            tetrisMove(-1)
+        }
+        if (event.keyCode == 39){
+            tetrisMove(1)
+        }
+        if (event.keyCode == 32){
+            tetrisRotate()
+        }
+    })
+</script>
