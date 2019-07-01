@@ -36,7 +36,7 @@
 </html>
 <script>
     
-    let board, newRow, tetris, gameState
+    let board, tetris, gameState
     let gameDisplay = document.getElementById('display')
     let gameDisplay2 = document.getElementById('display2')
     let displayContext = gameDisplay.getContext('2d')
@@ -80,10 +80,6 @@
         tetrisListShow()
         showTextNexts()
         requestAnimationFrame( gameLoop )
-    }
-    newRow = []
-    for( let i = 0; i < board.column; i ++){
-        newRow.push( board.empty )
     }
     board.body = boardCreate()
     gameLoop()
@@ -157,12 +153,10 @@
     
     function tetrisDrop(){
         if( isCollide( 0, 1 ) ){
-            console.log('obj');
             fixed()
             tetrisReset()
         }else{
             tetris.y ++
-            boardShow()
         }
     }
     
@@ -208,10 +202,10 @@
         let x = tetris.x
         let y = tetris.y
         
-        for( let i = 0; i < tType.length; i ++ ){
-            for( let j = 0; j < tType[i].length; j ++ ){
-                if( tType[i][j] ){
-                    board.body[i + y][j + x] = tcolor 
+        for( let r = 0; r < tType.length; r ++ ){
+            for( let c = 0; c < tType[r].length; c ++ ){
+                if( tType[r][c] ){
+                    board.body[r + y][c + x] = tcolor 
                 }
             }
         }
@@ -258,6 +252,10 @@
     }
         
     function cutLine(){
+        let newRow = []
+        for( let i = 0; i < board.column; i ++){
+            newRow.push( board.empty )
+        }
         let multiply = 1
         for( let i = board.row - 1; i >= 0; i -- ){
             if( !board.body[i].includes( board.empty ) ){
