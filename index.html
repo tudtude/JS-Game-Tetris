@@ -77,7 +77,6 @@
     gameStart = setInterval( gameLoop, 1000/framPerSec )
     
     function crateBoard(){
-        console.log('createBoard was called');
         for( let r = 0; r < board.row; r ++ ){
             board.body[r] = [] 
             for( let c = 0; c < board.column; c ++ ){
